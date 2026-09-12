@@ -9,146 +9,101 @@
   <img src="https://img.shields.io/badge/LocalStorage-000000?style=for-the-badge&logo=googlechrome&logoColor=white" alt="LocalStorage" />
 </p>
 
-Tracalorie is a lightweight calorie tracking dashboard built with vanilla JavaScript and Bootstrap. It helps users monitor their daily calorie intake, log meals and workouts, track hydration, and save a quick personal note about how they feel throughout the day.
+<p align="center">
+  <a href="https://tracalorie-mu.vercel.app/"><strong>Live Demo</strong></a>
+  ·
+  <a href="https://github.com/MostafaMohammedAtef/tracalorie/issues">Report an Issue</a>
+</p>
 
-The app is designed for everyday use and stores its data locally in the browser so that progress remains available across refreshes without requiring a backend service.
+<p align="center">
+  A single-page calorie and wellness tracker built in vanilla JavaScript, structured around a small, explicit object model with a clean separation between UI, state, and persistence.
+</p>
+
+---
 
 ## Overview
 
-This project gives users a clear view of their daily wellness numbers in one place. It combines activity entries, calorie totals, and hydration tracking into a single, clean dashboard that is easy to review at a glance.
+Tracalorie is a client-side dashboard for logging daily nutrition and activity. A user sets a calorie budget, records meals and workouts against it, and the app derives consumption, burn, and remaining balance in real time — alongside hydration tracking and a short daily journal entry. There is no backend: the entire application state is held in memory during a session and persisted to `localStorage` between visits.
 
-The application is intentionally simple and focused on usability. Instead of requiring a server or database, it uses browser local storage to save important values such as:
+The project is intentionally scoped as a **static, dependency-light front end** — no build step, no framework, no package manager — while still applying the separation-of-concerns discipline you'd expect from a larger codebase. That trade-off is the main point of interest here: how far a plain OOP structure can go before you'd actually reach for a framework.
 
-- daily calorie limit
-- meals entered by the user
-- workouts logged by the user
-- hydration progress
-- journal mood and note
+## Table of Contents
+
+- [Features](#features)
+- [Architecture](#architecture)
+- [Tech Stack](#tech-stack)
+- [Styling & Theming](#styling--theming)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Usage](#usage)
+- [Roadmap](#roadmap)
+- [License](#license)
 
 ## Features
 
-### Daily calorie dashboard
+| Area | Capability |
+|---|---|
+| **Dashboard** | Real-time calorie limit, net gain/loss, consumed, burned, and remaining totals, with a progress bar tracking pace against the daily limit |
+| **Meals** | Add, edit, delete, and filter meal entries (name + calories) |
+| **Workouts** | Add, edit, delete, and filter workout entries (name + calories burned) |
+| **Calorie limit** | Set or update the daily target from a modal; every derived metric recalculates immediately |
+| **Hydration** | Log water intake in preset increments with its own progress bar toward a daily goal |
+| **Journal** | Record an energy level and a short free-text note for the day |
+| **Filtering** | Real-time text filtering across meals and workouts, independently |
+| **Reset** | Clear the day's meals, workouts, water, and journal entry in one confirmed action |
+| **Export** | Download the current day's full state as a JSON file |
+| **Persistence** | All state survives a page refresh via `localStorage` — no account or server required |
 
-The home dashboard displays the key numbers that matter most for tracking progress:
+## Architecture
 
-- daily calorie limit
-- total net calories gained or lost
-- calories consumed
-- calories burned
-- calories remaining
-- progress bar showing how close the user is to the daily limit
+The app follows a **four-layer object model**, visualized below and implemented in `js/app.js`:
 
-This makes it easy to understand whether the current day is in a surplus or deficit.
+![Tracalorie class architecture](project_diagram.png)
 
-### Meal tracking
+*(Class and method names below reflect the shipped implementation in `js/app.js`, which has grown a few responsibilities past this original design sketch — journaling, filtering, and export chief among them.)*
 
-Users can add meal items with the following information:
+| Class | Role | Responsibility |
+|---|---|---|
+| **`App`** | Controller / event layer | Wires up every DOM event listener on construction (forms, filters, water buttons, export, journal) and owns per-item rendering — `_appendItem` / `_renderItems` build the meal and workout cards, `_editItem` handles inline edits via prompts. Holds no tracked state itself; it delegates every mutation to `CalorieTracker`. |
+| **`CalorieTracker`** | State layer | The single source of truth for the current day: calorie limit, the in-memory `_meals` / `_workouts` collections, water, and the journal entry. Totals are never stored — `_calculateTotal()` derives them from `_meals` and `_workouts` on every mutation. Exposes a public API (`addMeal`, `removeMeal`, `editMeal`, `addWorkout`, `removeWorkout`, `editWorkout`, `setCalorieLimit`, `addWater`, `saveJournal`, `clearItems`) and keeps the *aggregate* dashboard numbers — limit, totals, remaining, progress bars — behind private `_display*` methods. |
+| **`Meal`** / **`Workout`** | Domain models | Minimal data classes (`id`, `name`, `calories`) representing a single tracked entry, with `id` defaulting to a random token if none is supplied. Kept deliberately dumb — no behavior, just shape. |
+| **`AppStorage`** | Persistence layer | A static utility class wrapping `localStorage` behind a `keys` map, so every persisted value lives under a namespaced key. Provides get/set pairs for the calorie limit, meals, workouts, water, and journal, plus `clearItems()` (used by "Reset Day," which preserves your calorie limit) and a broader `clearAll()` that also drops it. This is the *only* module that talks to `localStorage` directly. |
 
-- meal name
-- calories value
+State is persisted under five namespaced keys — `tracalorie-calorie-limit`, `tracalorie-meals`, `tracalorie-workouts`, `tracalorie-water`, `tracalorie-journal` — so the app's data can't collide with anything else stored under the same origin.
 
-Each meal appears as a card in the meals section and can be:
+**Why it's shaped this way:**
 
-- edited
-- deleted
-- filtered by search text
-
-Meal entries are highlighted in the same color style used throughout the dashboard for quick visual recognition.
-
-### Workout tracking
-
-Users can log workout activity in a separate section that includes:
-
-- workout name
-- calories burned
-
-Workout entries support the same actions as meals:
-
-- edit
-- delete
-- filter
-
-These values are then subtracted from the total calorie count to calculate net progress for the day.
-
-### Calorie limit controls
-
-A daily calorie target can be set from a modal form. The limit updates the tracker instantly and adjusts the remaining calories and progress bar based on current totals.
-
-This gives the user flexibility to adapt the app to their personal nutrition goals without reloading or restarting the app.
-
-### Water intake tracking
-
-The app includes a dedicated hydration panel that tracks daily water consumption.
-
-Users can add water in preset amounts, such as:
-
-- 250 ml
-- 500 ml
-
-The app displays:
-
-- current water amount
-- total hydration goal
-- progress bar for water intake
-
-The hydration feature makes the tracker more complete by covering an important wellness metric in addition to calories.
-
-### Daily journal
-
-The site includes a mood and note section where the user can record:
-
-- energy level
-- short daily note
-
-This journal data is stored in the browser and loads automatically when the page is reopened, making it useful for reflecting on habits over time.
-
-### Filtering and search
-
-Both meal and workout lists can be filtered in real time using text inputs. This helps users quickly find an entry without manually scrolling through the full list.
-
-A clear filters action resets the search fields instantly.
-
-### Reset day functionality
-
-The app includes a reset option that clears the day’s calorie activity, water, and journal entries after confirmation. This is useful for starting fresh on a new day or undoing a full tracking session.
-
-### Data export
-
-Users can export the current day’s data as a JSON file. This includes:
-
-- calorie limit
-- meals
-- workouts
-- water intake
-- journal data
-- timestamp
-
-This allows the user to save or share their tracked data outside the browser if needed.
-
-### Local persistence
-
-All the app data is saved with browser localStorage. That means:
-
-- entries stay available after refresh
-- the current tracking state persists during typical browser use
-- no backend setup is required
+- **Single source of truth.** `CalorieTracker` is the only place derived numbers (consumed, burned, remaining, net) are computed, so the dashboard can never drift from the underlying data.
+- **Persistence is isolated.** Nothing outside `AppStorage` reads or writes `localStorage` directly. Swapping local storage for a REST API or IndexedDB later is a change to one module, not a rewrite.
+- **Encapsulation by convention, not enforcement.** Internal methods and fields use a leading-underscore convention (`_displayCaloriesTotal`, `_calculateTotal`, `_meals`) to signal "implementation detail." It's naming only, though — `App` reaches directly into `this._tracker._meals`, `_tracker._journal`, and `_tracker._calorieLimit` when rendering and exporting, rather than going through public getters. Worth tightening (see [Roadmap](#roadmap)).
+- **Thin-ish controller.** `App` contains no calorie math, but it does own per-item DOM rendering and editing — a responsibility that arguably belongs closer to the state layer. The calorie math itself stays independently testable regardless.
 
 ## Tech Stack
 
-This project uses a simple front-end stack based on static web technologies:
+- **HTML5** — semantic structure and layout
+- **CSS3** — custom styling layered on top of Bootstrap primitives
+- **JavaScript (ES6 classes, no framework)** — application logic, state, and rendering
+- **Bootstrap 5.2.3** (CSS) — grid, modal, and component primitives, compiled with an overridden brand palette; the vendored `bootstrap.bundle.min.js` is v5.0.2 (see [Roadmap](#roadmap))
+- **Sass (SCSS)** — Bootstrap is vendored as full source under `scss/` and compiled locally rather than pulled from a CDN; the compiled output is committed, so no build step is required just to run the app
+- **Font Awesome Free 6.2.1** — iconography
+- **Web Storage API (`localStorage`)** — client-side persistence
 
-- HTML5 for structure and layout
-- CSS3 for styling and responsive presentation
-- JavaScript for application logic and interactivity
-- Bootstrap for components, layout, and styling
-- Font Awesome for icons
-- LocalStorage for persistent browser data
+## Styling & Theming
+
+The visual design is layered rather than defined in one place:
+
+1. **Bootstrap's own palette is pre-swapped, at the source.** `scss/` vendors the complete Bootstrap 5.2.3 Sass source (`forms/`, `helpers/`, `mixins/`, `utilities/`, `vendor/`, plus every standard partial) and the compiled `css/bootstrap.css` is built from it locally rather than linked from a CDN. Only a couple of those partials are actually customized for this project — almost certainly the color/theme variables, since that's the only thing that differs from stock Bootstrap in the compiled output (`--bs-primary` and `--bs-success` both resolve to a green, `--bs-secondary` to an orange). The rest of the ~50 vendored files are the untouched library, kept so the theme can be rebuilt.
+2. **`style.css` layers a second, wider palette on top** through its own custom properties (`--ink`, `--paper`, `--surface`, `--tomato`, `--paprika`, `--gold`, `--aubergine`, `--ocean`, `--cyan`), then reassigns the elements that actually carry the app's look — `.btn-primary`, `.items .bg-primary`, the metric-card gradients — directly to these tokens with `!important`. In practice, this second layer defines Tracalorie's identity; Bootstrap's own compiled-in palette mostly goes unused once `style.css` loads after it.
+3. **Responsive behavior is consolidated, not scattered** — every mobile-specific rule lives in a single `@media (max-width: 575.98px)` block at the end of `style.css`, rather than spread across the file.
+
+This works, but it's two theming layers doing one job — reassigning Bootstrap's own `--bs-*` variables to the app's palette directly (instead of overriding a second token set with `!important`) would collapse them into one.
 
 ## Project Structure
 
 ```text
 tracalorie/
 ├── index.html
+├── project_diagram.png
 ├── css/
 │   ├── bootstrap.css
 │   ├── bootstrap-grid.css
@@ -157,10 +112,13 @@ tracalorie/
 │   ├── fontawesome.css
 │   └── style.css
 ├── js/
-│   ├── app.js
+│   ├── app.js                # App, CalorieTracker, Meal, Workout, AppStorage
 │   └── bootstrap.bundle.min.js
-├── scss/
-│   └── ...
+├── scss/                      # Full vendored Bootstrap 5.2.3 source; only a couple of partials are actually customized
+│   ├── forms/ · helpers/ · mixins/ · utilities/ · vendor/
+│   ├── bootstrap.scss · bootstrap-grid.scss · bootstrap-reboot.scss · bootstrap-utilities.scss
+│   ├── _variables.scss · _root.scss · ... (~40 more stock Bootstrap partials)
+│   └── style.scss
 ├── webfonts/
 ├── favicon.ico
 └── README.md
@@ -170,51 +128,46 @@ tracalorie/
 
 ### Prerequisites
 
-No framework installation or package manager setup is required.
+Nothing to install — this is a static site with zero build tooling and no package manager dependency. You need a modern browser and, optionally, a local static file server.
 
-You only need:
-
-- a modern web browser
-- a local web server or direct file access
-
-### Run the project
-
-You can launch the project in either of these ways:
-
-1. Open index.html directly in the browser.
-2. Serve the folder with a local static server, for example:
+### Run locally
 
 ```bash
+git clone https://github.com/MostafaMohammedAtef/tracalorie.git
+cd tracalorie
 python -m http.server
 ```
 
-Then open the local URL shown in the terminal, typically:
-
-```text
-http://localhost:8000
-```
+Then open `http://localhost:8000` in your browser. Alternatively, open `index.html` directly — the app has no server-side requirements.
 
 ## Usage
 
-1. Set your daily calorie limit.
-2. Add a meal with its calories.
-3. Add workouts that burn calories.
-4. Track your hydration using the water buttons.
-5. Save a quick mood or note in the journal section.
-6. Use the filter boxes to find specific entries quickly.
-7. Export your data when needed.
-8. Reset the day whenever you want to begin fresh.
+1. Set a daily calorie limit from the header.
+2. Log meals as you eat, with a name and calorie count.
+3. Log workouts as you complete them, with a name and calories burned.
+4. Track hydration using the quick-add water buttons.
+5. Leave a short journal note on how the day felt.
+6. Use the filter fields to find a specific meal or workout instantly.
+7. Export the day as JSON if you want to keep a record outside the browser, or reset to start clean.
 
-## Application Behavior
+## Roadmap
 
-The app calculates total progress using the following principle:
+Ideas for pushing this past a learning project, roughly in order of impact:
 
-- consumed calories from meals
-- minus burned calories from workouts
-- compared against the user-defined calorie target
+- [ ] Convert `_`-prefixed conventions to true private class fields (`#method`) — and stop `App` from reaching into `CalorieTracker`'s internals directly
+- [ ] Align Bootstrap versions — CSS is compiled at v5.2.3, but the vendored `bootstrap.bundle.min.js` is v5.0.2
+- [ ] Collapse the two color-token layers (framework `--bs-*` vars vs. `style.css`'s own palette) into one theming source
+- [ ] Add a unit test suite (Jest) around `CalorieTracker`'s calorie math
+- [ ] Replace `localStorage` with a small backend (or IndexedDB) for multi-device sync
+- [ ] Document the Sass command used to (re)compile `css/bootstrap.css` from `scss/`, and prune the vendored partials that aren't actually part of that build
+- [ ] Add a dark theme toggle
 
-The logic updates the UI immediately after each item is added, edited, removed, or reset. All major changes are reflected in the dashboard widgets and progress bars.
+## License
 
-## Summary
+No license file is currently published in this repository, so the code is **all rights reserved** by default. If you intend for others to use, modify, or redistribute this project, consider adding an [MIT](https://choosealicense.com/licenses/mit/) or similar permissive license.
 
-Tracalorie is a focused, usable calorie tracking application designed for daily wellness monitoring. It combines tracking, filtering, journaling, hydration, and export features into a clean single-page interface while storing data locally for convenience and simplicity.
+---
+
+<p align="center">
+  Built by <a href="https://github.com/MostafaMohammedAtef">Mostafa Mohamed Atef</a>
+</p>
