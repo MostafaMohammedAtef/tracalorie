@@ -3,6 +3,8 @@ class AppStorage {
     calorieLimit: "tracalorie-calorie-limit",
     meals: "tracalorie-meals",
     workouts: "tracalorie-workouts",
+    water: "tracalorie-water",
+    journal: "tracalorie-journal",
   };
 
   static _read(key, fallback) {
@@ -29,6 +31,16 @@ class AppStorage {
     return Array.isArray(workouts) ? workouts : [];
   }
 
+  static getWater() {
+    const water = Number(this._read(this.keys.water, 0));
+    return water >= 0 ? water : 0;
+  }
+
+  static getJournal() {
+    const journal = this._read(this.keys.journal, {});
+    return journal && typeof journal === "object" ? journal : {};
+  }
+
   static saveCalorieLimit(limit) {
     localStorage.setItem(this.keys.calorieLimit, JSON.stringify(limit));
   }
@@ -41,9 +53,19 @@ class AppStorage {
     localStorage.setItem(this.keys.workouts, JSON.stringify(workouts));
   }
 
+  static saveWater(water) {
+    localStorage.setItem(this.keys.water, JSON.stringify(water));
+  }
+
+  static saveJournal(journal) {
+    localStorage.setItem(this.keys.journal, JSON.stringify(journal));
+  }
+
   static clearItems() {
     localStorage.removeItem(this.keys.meals);
     localStorage.removeItem(this.keys.workouts);
+    localStorage.removeItem(this.keys.water);
+    localStorage.removeItem(this.keys.journal);
   }
 
   static clearAll() {
@@ -62,6 +84,9 @@ class CalorieTracker {
       (workout) =>
         new Workout(workout.name, Number(workout.calories), workout.id),
     );
+    this._water = AppStorage.getWater();
+    this._waterGoal = 2000;
+    this._journal = AppStorage.getJournal();
     this._totalCalories = this._calculateTotal();
 
     this._displayCaloriesLimit();
@@ -70,6 +95,7 @@ class CalorieTracker {
     this._displayCaloriesBurnt();
     this._displayCaloriesRemaining();
     this._displayCalorieProgress();
+    this._displayWater();
   }
 
   // Public Methods/API
@@ -108,6 +134,26 @@ class CalorieTracker {
     }
   }
 
+  editMeal(id, name, calories) {
+    const meal = this._meals.find((item) => item.id === id);
+    if (!meal) return;
+    meal.name = name;
+    meal.calories = calories;
+    AppStorage.saveMeals(this._meals);
+    this._totalCalories = this._calculateTotal();
+    this._render();
+  }
+
+  editWorkout(id, name, calories) {
+    const workout = this._workouts.find((item) => item.id === id);
+    if (!workout) return;
+    workout.name = name;
+    workout.calories = calories;
+    AppStorage.saveWorkouts(this._workouts);
+    this._totalCalories = this._calculateTotal();
+    this._render();
+  }
+
   setCalorieLimit(limit) {
     this._calorieLimit = limit;
     AppStorage.saveCalorieLimit(limit);
@@ -117,9 +163,22 @@ class CalorieTracker {
   clearItems() {
     this._meals = [];
     this._workouts = [];
+    this._water = 0;
+    this._journal = {};
     this._totalCalories = 0;
     AppStorage.clearItems();
     this._render();
+  }
+
+  addWater(amount) {
+    this._water = Math.min(this._water + amount, this._waterGoal);
+    AppStorage.saveWater(this._water);
+    this._displayWater();
+  }
+
+  saveJournal(journal) {
+    this._journal = journal;
+    AppStorage.saveJournal(journal);
   }
 
   _calculateTotal() {
@@ -202,6 +261,14 @@ class CalorieTracker {
     progressEl.style.width = `${width}%`;
   }
 
+  _displayWater() {
+    const waterCount = document.getElementById("water-count");
+    const waterProgress = document.getElementById("water-progress");
+    const percentage = (this._water / this._waterGoal) * 100;
+    waterCount.textContent = this._water;
+    waterProgress.style.width = `${Math.min(percentage, 100)}%`;
+  }
+
   _render() {
     this._displayCaloriesLimit();
     this._displayCaloriesTotal();
@@ -209,6 +276,7 @@ class CalorieTracker {
     this._displayCaloriesBurnt();
     this._displayCaloriesRemaining();
     this._displayCalorieProgress();
+    this._displayWater();
   }
 }
 
@@ -253,7 +321,21 @@ class App {
     document
       .getElementById("clear-filters")
       .addEventListener("click", this._clearFilters.bind(this));
+    document
+      .querySelectorAll("[data-water]")
+      .forEach((button) =>
+        button.addEventListener("click", () =>
+          this._tracker.addWater(Number(button.dataset.water)),
+        ),
+      );
+    document
+      .getElementById("export-data")
+      .addEventListener("click", this._exportData.bind(this));
+    document
+      .getElementById("journal-form")
+      .addEventListener("submit", this._saveJournal.bind(this));
 
+    this._loadJournal();
     this._renderItems();
   }
 
@@ -261,16 +343,21 @@ class App {
     e.preventDefault();
     const name = document.getElementById(`${type}-name`);
     const calories = document.getElementById(`${type}-calories`);
+    const calorieValue = Number(calories.value);
 
-    if (name.value === "" || calories.value === "") {
-      alert("Please fill in all fields");
+    if (
+      !name.value.trim() ||
+      !Number.isFinite(calorieValue) ||
+      calorieValue <= 0
+    ) {
+      alert("Enter a name and a calorie amount greater than zero");
       return;
     }
 
     const item =
       type === "meal"
-        ? new Meal(name.value, +calories.value)
-        : new Workout(name.value, +calories.value);
+        ? new Meal(name.value.trim(), calorieValue)
+        : new Workout(name.value.trim(), calorieValue);
     const listId = type === "meal" ? "meal-items" : "workout-items";
     const colorClass = type === "meal" ? "bg-primary" : "bg-secondary";
 
@@ -319,6 +406,9 @@ class App {
           <div class="fs-1 ${colorClass} text-white text-center rounded-2 px-2 px-sm-5">
             ${item.calories}
           </div>
+          <button class="edit btn btn-sm mx-1" type="button" aria-label="Edit ${item.name}">
+            <i class="fa-solid fa-pen"></i>
+          </button>
           <button class="delete btn btn-danger btn-sm mx-2" type="button">
             <i class="fa-solid fa-xmark"></i>
           </button>
@@ -330,6 +420,9 @@ class App {
     itemEl
       .querySelector(".delete")
       .setAttribute("aria-label", `Delete ${item.name}`);
+    itemEl.querySelector(".edit").addEventListener("click", () => {
+      this._editItem(listId, item, itemEl);
+    });
     itemEl.querySelector(".delete").addEventListener("click", () => {
       if (listId === "meal-items") {
         this._tracker.removeMeal(item.id);
@@ -347,6 +440,28 @@ class App {
 
     this._tracker.clearItems();
     this._renderItems();
+  }
+
+  _saveJournal(e) {
+    e.preventDefault();
+    const mood = document.getElementById("daily-mood").value;
+    const note = document.getElementById("daily-note").value.trim();
+    this._tracker.saveJournal({ mood, note });
+    this._setJournalStatus("Saved for today");
+  }
+
+  _setJournalStatus(message) {
+    const status = document.getElementById("journal-status");
+    status.textContent = message;
+    window.setTimeout(() => {
+      status.textContent = "";
+    }, 2200);
+  }
+
+  _loadJournal() {
+    const journal = this._tracker._journal;
+    document.getElementById("daily-mood").value = journal.mood || "";
+    document.getElementById("daily-note").value = journal.note || "";
   }
 
   _filterItems() {
@@ -374,6 +489,39 @@ class App {
     document.getElementById("filter-meals").value = "";
     document.getElementById("filter-workouts").value = "";
     this._filterItems();
+  }
+
+  _editItem(listId, item, itemEl) {
+    const name = prompt("Entry name", item.name)?.trim();
+    const calories = Number(prompt("Calories", item.calories));
+    if (!name || !calories || calories <= 0) return;
+
+    if (listId === "meal-items") {
+      this._tracker.editMeal(item.id, name, calories);
+    } else {
+      this._tracker.editWorkout(item.id, name, calories);
+    }
+    this._renderItems();
+  }
+
+  _exportData() {
+    const data = {
+      exportedAt: new Date().toISOString(),
+      calorieLimit: this._tracker._calorieLimit,
+      meals: this._tracker._meals,
+      workouts: this._tracker._workouts,
+      water: this._tracker._water,
+      journal: this._tracker._journal,
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "tracalorie-day.json";
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   _renderItems() {

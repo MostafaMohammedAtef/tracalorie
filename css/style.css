@@ -29,6 +29,7 @@ body {
 header {
   background: var(--ocean) !important;
   box-shadow: 0 8px 24px rgba(20, 36, 63, 0.24);
+  border-bottom: 1px solid rgba(54, 197, 216, 0.28);
 }
 
 header h1 {
@@ -45,6 +46,17 @@ header h1 i {
   display: flex;
   gap: 0.5rem;
   align-items: center;
+}
+
+.header-actions .btn {
+  border-radius: 0.45rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+}
+
+.header-actions .btn i {
+  margin-right: 0.3rem;
+  color: var(--cyan);
 }
 
 .dashboard-intro,
@@ -148,6 +160,7 @@ header h1 i {
   border: 1px solid var(--line);
   border-radius: 0.75rem;
   box-shadow: var(--shadow);
+  backdrop-filter: blur(8px);
 }
 
 .stats .card {
@@ -194,12 +207,12 @@ header h1 i {
 }
 
 .stats .card.bg-dark {
-  background: var(--aubergine) !important;
+  background: linear-gradient(135deg, var(--aubergine), var(--ocean)) !important;
 }
 
 .stats .card.bg-primary {
   color: var(--ink) !important;
-  background: var(--paprika) !important;
+  background: linear-gradient(135deg, var(--paprika), var(--gold)) !important;
 }
 
 .stats .card.bg-light,
@@ -237,6 +250,148 @@ header h1 i {
 
 .progress-panel {
   padding-top: 0.75rem;
+}
+
+.wellness-panel {
+  max-width: 1180px;
+  margin: 1.75rem auto 0;
+}
+
+.wellness-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid rgba(54, 197, 216, 0.24);
+  border-radius: 1rem;
+  background: linear-gradient(110deg, rgba(20, 36, 63, 0.97), rgba(32, 45, 82, 0.93));
+  box-shadow: 0 16px 32px rgba(20, 36, 63, 0.16);
+  color: #fff;
+}
+
+.wellness-card__icon {
+  display: grid;
+  width: 2.8rem;
+  height: 2.8rem;
+  place-items: center;
+  border: 1px solid rgba(54, 197, 216, 0.32);
+  border-radius: 0.8rem;
+  background: rgba(54, 197, 216, 0.13);
+  color: var(--cyan);
+  font-size: 1.1rem;
+}
+
+.wellness-card .eyebrow {
+  margin-bottom: 0.2rem;
+  color: var(--cyan);
+}
+
+.wellness-card h2 {
+  margin: 0 0 0.55rem;
+  color: #fff;
+  font-size: 1.25rem;
+}
+
+.wellness-card h2 small {
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.water-progress {
+  height: 0.35rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.water-progress__bar {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--cyan);
+  box-shadow: 0 0 12px rgba(54, 197, 216, 0.7);
+  transition: width 0.3s ease;
+}
+
+.water-actions {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.btn-water {
+  border: 1px solid rgba(54, 197, 216, 0.4);
+  background: rgba(54, 197, 216, 0.12);
+  color: #fff;
+}
+
+.btn-water:hover,
+.btn-water:focus {
+  border-color: var(--cyan);
+  background: var(--cyan);
+  color: var(--ocean);
+}
+
+.journal-panel {
+  max-width: 1180px;
+  margin: 1.25rem auto 0;
+}
+
+.journal-card {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) 1.8fr;
+  gap: 1.5rem;
+  padding: 1.35rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: rgba(251, 253, 255, 0.78);
+  box-shadow: 0 12px 28px rgba(29, 51, 84, 0.08);
+}
+
+.journal-card__heading h2 {
+  margin-bottom: 0.45rem;
+  color: var(--aubergine);
+  font-size: 1.35rem;
+  letter-spacing: -0.03em;
+}
+
+.journal-card__heading > p:last-child {
+  margin-bottom: 0;
+  color: var(--muted-ink);
+  font-size: 0.84rem;
+}
+
+.journal-form {
+  display: grid;
+  grid-template-columns: minmax(130px, 0.7fr) 1.4fr auto;
+  align-items: end;
+  gap: 0.75rem;
+}
+
+.journal-fields label {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--muted-ink);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.journal-fields .form-select,
+.journal-fields .form-control {
+  border-color: var(--line);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.journal-status {
+  grid-column: 2;
+  min-height: 1rem;
+  margin: -0.65rem 0 0;
+  color: var(--cyan);
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 
 .progress-panel__heading {
@@ -358,6 +513,15 @@ header h1 i {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+.items .edit {
+  color: var(--muted-ink);
+}
+
+.items .edit:hover,
+.items .edit:focus {
+  color: var(--cyan);
+}
+
 .items .card:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 24px rgba(49, 77, 91, 0.12);
@@ -461,6 +625,28 @@ header h1 i {
   }
   .dashboard-intro__badge {
     align-self: flex-start;
+  }
+  .wellness-panel {
+    padding-right: 1rem;
+    padding-left: 1rem;
+  }
+  .wellness-card {
+    grid-template-columns: auto 1fr;
+  }
+  .water-actions {
+    grid-column: 1/-1;
+  }
+  .journal-panel {
+    padding-right: 1rem;
+    padding-left: 1rem;
+  }
+  .journal-card,
+  .journal-form {
+    grid-template-columns: 1fr;
+  }
+  .journal-status {
+    grid-column: auto;
+    margin-top: 0;
   }
   .activity-heading {
     align-items: start;
