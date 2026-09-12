@@ -19,9 +19,9 @@
   </head>
   <body>
     <header
-      class="bg-primary d-sm-flex justify-content-between align-items-center text-white text-center py-2 px-5">
+      class="site-header bg-primary d-sm-flex justify-content-between align-items-center text-white text-center py-2 px-5">
       <h1><i class="fa-solid fa-utensils"></i> Tracalorie</h1>
-      <div>
+      <div class="header-actions">
         <button
           class="btn btn-outline-light mx-3"
           data-bs-toggle="modal"
@@ -32,11 +32,31 @@
       </div>
     </header>
 
+    <section class="dashboard-intro px-5">
+      <div class="dashboard-intro__content">
+        <p class="eyebrow">Daily dashboard</p>
+        <h2>Eat well. Move often.</h2>
+        <p>Keep today's intake and activity in view, one entry at a time.</p>
+      </div>
+      <div class="dashboard-intro__badge">
+        <i class="fa-solid fa-bolt"></i>
+        <span>Today in balance</span>
+      </div>
+    </section>
+
     <!-- Stats -->
     <section class="stats my-5 px-5">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Your numbers</p>
+          <h2>At a glance</h2>
+        </div>
+        <span class="section-heading__rule"></span>
+      </div>
       <div class="row g-3 my-3">
         <div class="col-md-6">
-          <div class="card text-center bg-dark text-white">
+          <div
+            class="card metric-card metric-card--limit text-center bg-dark text-white">
             <div class="card-body">
               <div id="calories-limit" class="fs-1 fw-bold">2000</div>
               <p class="fs-4">Daily Calorie Limit</p>
@@ -44,7 +64,8 @@
           </div>
         </div>
         <div class="col-md-6">
-          <div class="card text-center bg-primary text-white">
+          <div
+            class="card metric-card metric-card--total text-center bg-primary text-white">
             <div class="card-body">
               <div id="calories-total" class="fs-1 fw-bold">400</div>
               <p class="fs-4">Gain/Loss</p>
@@ -54,7 +75,7 @@
       </div>
       <div class="row g-3 text-center">
         <div class="col-md-4">
-          <div class="card bg-light">
+          <div class="card metric-card metric-card--consumed bg-light">
             <div class="card-body">
               <div id="calories-consumed" class="fs-1 fw-bold">700</div>
               <p class="fs-4">Calories Consumed</p>
@@ -62,7 +83,7 @@
           </div>
         </div>
         <div class="col-md-4">
-          <div class="card bg-light">
+          <div class="card metric-card metric-card--burned bg-light">
             <div class="card-body">
               <div id="calories-burned" class="fs-1 fw-bold">300</div>
               <p class="fs-4">Calories Burned</p>
@@ -70,7 +91,7 @@
           </div>
         </div>
         <div class="col-md-4">
-          <div class="card bg-light">
+          <div class="card metric-card metric-card--remaining bg-light">
             <div class="card-body">
               <div id="calories-remaining" class="fs-1 fw-bold">1600</div>
               <p class="fs-4">Calories Remaining</p>
@@ -80,7 +101,11 @@
       </div>
     </section>
 
-    <section class="px-5">
+    <section class="progress-panel px-5">
+      <div class="progress-panel__heading">
+        <span>Daily progress</span>
+        <span>Limit pace</span>
+      </div>
       <div class="progress">
         <div
           id="calorie-progress"
@@ -91,6 +116,13 @@
 
     <!-- Filter -->
     <section class="filter my-5 px-5">
+      <div class="filter-heading">
+        <div>
+          <p class="eyebrow">Log the day</p>
+          <h2>Find an entry fast</h2>
+        </div>
+        <i class="fa-solid fa-sliders"></i>
+      </div>
       <div class="row g-3">
         <div class="col-md-6">
           <div class="mt-3">
@@ -111,13 +143,26 @@
           </div>
         </div>
       </div>
+      <button
+        id="clear-filters"
+        class="btn btn-link filter-clear"
+        type="button">
+        <i class="fa-solid fa-rotate-left"></i> Clear filters
+      </button>
     </section>
 
     <!-- Items -->
     <section class="items mx-5">
+      <div class="activity-heading">
+        <div>
+          <p class="eyebrow">Your activity</p>
+          <h2>Meals and movement</h2>
+        </div>
+        <p>Build a clearer picture of your day.</p>
+      </div>
       <div class="row g-4">
         <!-- Meals -->
-        <div class="col-md-6">
+        <div class="col-md-6 activity-column activity-column--meals">
           <div class="d-flex align-items-center">
             <h2 class="border-start border-primary border-3 p-2">
               Meals / Food Items
@@ -157,7 +202,7 @@
             </div>
           </div>
 
-          <div id="meal-items">
+          <div id="meal-items" class="activity-list">
             <!-- Item 1 -->
             <div class="card my-2">
               <div class="card-body">
@@ -191,7 +236,7 @@
           </div>
         </div>
         <!-- Workout -->
-        <div class="col-md-6">
+        <div class="col-md-6 activity-column activity-column--workouts">
           <div class="d-flex align-items-center">
             <h2 class="border-start border-secondary border-3 p-2">Workouts</h2>
             <button
@@ -229,7 +274,7 @@
             </div>
           </div>
 
-          <div id="workout-items">
+          <div id="workout-items" class="activity-list">
             <!-- Item 1 -->
             <div class="card my-2">
               <div class="card-body">
