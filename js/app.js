@@ -32,3 +32,13 @@ class Workout {
     this.calories = calories;
   }
 }
+
+const tracker = new CalorieTracker();
+
+const breakfast = new Meal("Breakfast", 400);
+
+tracker.addMeal(breakfast);
+
+const run = new Workout("run", 300);
+
+tracker.addWorkout(run);
